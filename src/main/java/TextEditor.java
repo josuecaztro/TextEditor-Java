@@ -1,9 +1,12 @@
+//package src.main.java;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.*;
+import javax.swing.*;
 
-//TextEditor class starts here
+//src.main.java.TextEditor class starts here
 class TextEditor extends Frame implements ActionListener {
     TextArea ta = new TextArea();
     int i, len1, len, pos1;
@@ -11,6 +14,9 @@ class TextEditor extends Frame implements ActionListener {
     String months[] = { "January", "February", "March", "April", "May", "June", "July", "August", "September",
             "October", "November", "December" };
     CheckboxMenuItem chkb = new CheckboxMenuItem("Word Wrap");
+
+    public Map<String, Runnable> actionCommands = new HashMap<>();
+
 
     public TextEditor() {
         MenuBar mb = new MenuBar();
@@ -21,10 +27,12 @@ class TextEditor extends Frame implements ActionListener {
         Menu m2 = new Menu("Edit");
         Menu m3 = new Menu("Tools");
         Menu m4 = new Menu("Help");
+        Menu m5 = new Menu("This Does Nothing");
         mb.add(m1);
         mb.add(m2);
         mb.add(m3);
         mb.add(m4);
+        mb.add(m5);
         MenuItem mi1[] = {
                 new MenuItem("New"), new MenuItem("Open"), new MenuItem("Save"), new MenuItem("Save As"),
                 new MenuItem("Page Setup"), new MenuItem("Print"), new MenuItem("Exit")
@@ -37,7 +45,7 @@ class TextEditor extends Frame implements ActionListener {
         MenuItem mi3[] = { new MenuItem("Choose Font"), new MenuItem("Compile"),
                 new MenuItem("Run") };
         MenuItem mi4[] = { new MenuItem("Help Topics"),
-                new MenuItem("About TextEditor") };
+                new MenuItem("About src.main.java.TextEditor") };
         for (int i = 0; i < mi1.length; i++) {
             m1.add(mi1[i]);
             mi1[i].addActionListener(this);
@@ -59,20 +67,22 @@ class TextEditor extends Frame implements ActionListener {
         MyWindowsAdapter mw = new MyWindowsAdapter(this);
         addWindowListener(mw);
         setSize(500, 500);
-        setTitle("untitled notepad");
+        setTitle("Josue's Notepad - Get Writing!");
         setVisible(true);
+
+
     }
 
-    public void actionPerformed(ActionEvent ae) {
-        String arg = (String) ae.getActionCommand();
-        if (arg.equals("New")) {
-            dispose();
-            TextEditor t11 = new TextEditor();
-            t11.setSize(500, 500);
-            t11.setVisible(true);
-        }
+
+    public void newAction(){
+        dispose();
+        TextEditor t11 = new TextEditor();
+        t11.setSize(500, 500);
+        t11.setVisible(true);
+    }
+
+    public void openAction(){
         try {
-            if (arg.equals("Open")) {
                 FileDialog fd1 = new FileDialog(this, "Select File", FileDialog.LOAD);
                 fd1.setVisible(true);
                 String s4 = "";
@@ -88,11 +98,12 @@ class TextEditor extends Frame implements ActionListener {
                 }
                 ta.setText(s4);
                 fii.close();
-            }
         } catch (IOException e) {
         }
+    }
+
+    public void saveAsAction(){
         try {
-            if (arg.equals("Save As")) {
                 FileDialog dialog1 = new FileDialog(this, "Save As", FileDialog.SAVE);
                 dialog1.setVisible(true);
                 s7 = dialog1.getDirectory();
@@ -107,53 +118,115 @@ class TextEditor extends Frame implements ActionListener {
                     fobj1.write(buf[k]);
                 }
                 fobj1.close();
-            }
             this.setTitle(s8 + " TextEditor File");
         } catch (IOException e) {
         }
-        if (arg.equals("Exit")) {
-            System.exit(0);
+    }
+
+    public void exitAction(){
+        System.exit(0);
+    }
+
+    public void cutAction(){
+        str = ta.getSelectedText();
+        i = ta.getText().indexOf(str);
+        ta.replaceRange(" ", i, i + str.length());
+    }
+
+    public void copyAction(){
+        str = ta.getSelectedText();
+    }
+
+    public void pasteAction(){
+        pos1 = ta.getCaretPosition();
+        ta.insert(str, pos1);
+    }
+
+    public void deleteAction(){
+        String msg = ta.getSelectedText();
+        i = ta.getText().indexOf(msg);
+        ta.replaceRange(" ", i, i + msg.length());
+        msg = "";
+    }
+
+    public void selectAllAction(){
+        String strText = ta.getText();
+        int strLen = strText.length();
+        ta.select(0, strLen);
+    }
+
+    public void timeStampAction(){
+        GregorianCalendar gcalendar = new GregorianCalendar();
+        String h = String.valueOf(gcalendar.get(Calendar.HOUR));
+        String m = String.valueOf(gcalendar.get(Calendar.MINUTE));
+        String s = String.valueOf(gcalendar.get(Calendar.SECOND));
+        String date = String.valueOf(gcalendar.get(Calendar.DATE));
+        String mon = months[gcalendar.get(Calendar.MONTH)];
+        String year = String.valueOf(gcalendar.get(Calendar.YEAR));
+        String hms = "Time" + " - " + h + ":" + m + ":" + s + " Date" + " - " + date + " " + mon + " " + year + " ";
+        int loc = ta.getCaretPosition();
+        ta.insert(hms, loc);
+    }
+
+    public void aboutAction(){
+        AboutDialog d1 = new AboutDialog(this, "About TextEditor");
+        d1.setVisible(true);
+        setSize(500, 500);
+    }
+
+    public void findAction() {
+        String searchText = JOptionPane.showInputDialog(this, "Find:", "Find", JOptionPane.PLAIN_MESSAGE);
+        if (searchText != null) {
+            String content = ta.getText();
+            int index = content.indexOf(searchText);
+            if (index != -1) {
+                ta.select(index, index + searchText.length());
+            } else {
+                JOptionPane.showMessageDialog(this, "Text not found", "Find", JOptionPane.INFORMATION_MESSAGE);
+            }
         }
-        if (arg.equals("Cut")) {
-            str = ta.getSelectedText();
-            i = ta.getText().indexOf(str);
-            ta.replaceRange(" ", i, i + str.length());
+    }
+
+    public void replaceAction() {
+        JPanel panel = new JPanel(new GridLayout(2, 2));
+        JTextField findField = new JTextField();
+        JTextField replaceField = new JTextField();
+        panel.add(new JLabel("Find:"));
+        panel.add(findField);
+        panel.add(new JLabel("Replace:"));
+        panel.add(replaceField);
+        int result = JOptionPane.showConfirmDialog(this, panel, "Replace", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            String findText = findField.getText();
+            String replaceText = replaceField.getText();
+            String content = ta.getText();
+            ta.setText(content.replace(findText, replaceText));
         }
-        if (arg.equals("Copy")) {
-            str = ta.getSelectedText();
+    }
+
+
+    public void actionPerformed(ActionEvent ae) {
+        String arg = ae.getActionCommand();
+
+        actionCommands.put("New", this::newAction);
+        actionCommands.put("Open", this::openAction);
+        actionCommands.put("Save As", this::saveAsAction);
+        actionCommands.put("Exit", this::exitAction);
+        actionCommands.put("Cut", this::cutAction);
+        actionCommands.put("Copy", this::copyAction);
+        actionCommands.put("Paste", this::pasteAction);
+        actionCommands.put("Delete", this::deleteAction);
+        actionCommands.put("Select All", this::selectAllAction);
+        actionCommands.put("Time Stamp", this::timeStampAction);
+        actionCommands.put("About TextEditor", this::aboutAction);
+        actionCommands.put("Find", this::findAction);
+        actionCommands.put("Replace", this::replaceAction);
+
+        Runnable action = actionCommands.get(arg);
+        if (action != null) {
+            action.run();
         }
-        if (arg.equals("Paste")) {
-            pos1 = ta.getCaretPosition();
-            ta.insert(str, pos1);
-        }
-        if (arg.equals("Delete")) {
-            String msg = ta.getSelectedText();
-            i = ta.getText().indexOf(msg);
-            ta.replaceRange(" ", i, i + msg.length());
-            msg = "";
-        }
-        if (arg.equals("Select All")) {
-            String strText = ta.getText();
-            int strLen = strText.length();
-            ta.select(0, strLen);
-        }
-        if (arg.equals("Time Stamp")) {
-            GregorianCalendar gcalendar = new GregorianCalendar();
-            String h = String.valueOf(gcalendar.get(Calendar.HOUR));
-            String m = String.valueOf(gcalendar.get(Calendar.MINUTE));
-            String s = String.valueOf(gcalendar.get(Calendar.SECOND));
-            String date = String.valueOf(gcalendar.get(Calendar.DATE));
-            String mon = months[gcalendar.get(Calendar.MONTH)];
-            String year = String.valueOf(gcalendar.get(Calendar.YEAR));
-            String hms = "Time" + " - " + h + ":" + m + ":" + s + " Date" + " - " + date + " " + mon + " " + year + " ";
-            int loc = ta.getCaretPosition();
-            ta.insert(hms, loc);
-        }
-        if (arg.equals("About TextEditor")) {
-            AboutDialog d1 = new AboutDialog(this, "About TextEditor");
-            d1.setVisible(true);
-            setSize(500, 500);
-        }
+
     }
     public static void main(String args[]) {
         TextEditor to = new TextEditor();
@@ -174,6 +247,7 @@ class MyWindowsAdapter extends WindowAdapter {
 }
 
 class AboutDialog extends Dialog implements ActionListener {
+
     AboutDialog(Frame parent, String title) {
         super(parent, title, false);
         this.setResizable(false);
